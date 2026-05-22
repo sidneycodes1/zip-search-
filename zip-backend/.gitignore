@@ -1,0 +1,49 @@
+# Environment files
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+
+# Virtual environment
+venv/
+.venv/
+
+# DeepFace models (large files)
+.deepface/
+
+# InsightFace models
+.insightface/
+
+# Test files with real photos
+test_face.jpg
+test_thumb.jpg
+*.jpg
+*.png
+*.jpeg
+
+# Temp files
+*.tmp
+tmp/
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+
+# Build
+dist/
+build/
+*.egg-info/

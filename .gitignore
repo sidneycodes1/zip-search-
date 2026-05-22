@@ -1,0 +1,29 @@
+# Environment files
+**/.env
+**/.env.local
+**/.env.*
+!**/.env.example
+
+# Python virtual environment
+**/venv/
+**/.venv/
+
+# Node modules
+**/node_modules/
+
+# Build outputs
+**/.next/
+**/dist/
+**/build/
+
+# Model files (too large for GitHub)
+**/.deepface/
+**/.insightface/
+
+# Test images
+**/test_face.jpg
+**/test_thumb.jpg
+
+# OS files
+.DS_Store
+Thumbs.db

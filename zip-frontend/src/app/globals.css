@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '@rainbow-me/rainbowkit/styles.css';
+
+
+
+@layer base {
+  :root {
+    --background: 0 0% 4%; /* #0A0A0A */
+    --foreground: 0 0% 96%; /* #F5F5F5 */
+    --muted: 0 0% 53%; /* #888888 */
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-zip-background text-zip-text font-sans antialiased selection:bg-zip-accent selection:text-black;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-mono;
+  }
+}
+
+@layer components {
+  /* You can add custom utility classes here if needed, but we rely mostly on Tailwind */
+}
