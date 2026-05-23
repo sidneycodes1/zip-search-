@@ -15,7 +15,7 @@ tf-keras==2.16.0
 insightface==0.7.3
 onnxruntime==1.18.0
 opencv-python-headless==4.10.0.84
-tensorflow==2.16.1  # DeepFace backend
+tensorflow-cpu==2.16.1
 
 # Social/username search
 maigret==0.4.4
@@ -23,9 +23,6 @@ maigret==0.4.4
 # Background job queue (production)
 celery==5.4.0
 redis==5.0.7
-
-# IPFS (Phase 2 - onchain)
-# pinatapy-voucher==0.1.4
 
 # Utilities
 python-dotenv==1.0.1

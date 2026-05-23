@@ -4,6 +4,7 @@ import webpack from "webpack";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: "standalone",
   webpack: (config) => {
     config.plugins.push(
       new webpack.IgnorePlugin({
