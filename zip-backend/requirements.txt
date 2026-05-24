@@ -15,7 +15,7 @@ tf-keras==2.16.0
 insightface==0.7.3
 onnxruntime==1.20.0
 opencv-python-headless==4.10.0.84
-tensorflow-cpu==2.16.1  # DeepFace backend
+tensorflow-cpu  # DeepFace backend
 
 # Social/username search
 maigret==0.4.4
