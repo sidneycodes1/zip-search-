@@ -1,11 +1,51 @@
 import asyncio
 import os
 import tempfile
+import urllib.parse
+import socket
+import ipaddress
 from typing import List, Optional
 from urllib.parse import parse_qs, urlparse
 import httpx
 from app.models.search import ResultCategory, SearchResult
 import numpy as np
+
+
+def is_safe_url(url: str) -> bool:
+    """Validate that the URL is public and not a local/private network resource (prevents SSRF)."""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False
+
+        host = parsed.hostname
+        if not host:
+            return False
+
+        # Preemptively check loopback and typical internal domains
+        host_lower = host.lower()
+        if host_lower in ("localhost", "127.0.0.1", "[::1]", "localhost.localdomain"):
+            return False
+
+        # Attempt to resolve the host to check the destination IP
+        try:
+            ip = socket.gethostbyname(host)
+            ip_obj = ipaddress.ip_address(ip)
+            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
+                return False
+        except Exception:
+            # If resolution failed, verify if the host string itself represents a private IP address
+            try:
+                ip_obj = ipaddress.ip_address(host)
+                if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
+                    return False
+            except ValueError:
+                # Not a literal IP address and hostname couldn't resolve; we let httpx fail natively
+                pass
+
+        return True
+    except Exception:
+        return False
 
 
 class FaceMatcher:
@@ -50,16 +90,18 @@ class FaceMatcher:
                 matched = None
                 thumbnail_path = await self._download_image(result.thumbnail)
                 if thumbnail_path:
-                    matched = await asyncio.get_running_loop().run_in_executor(
-                        None,
-                        self._compare_faces,
-                        reference_path,
-                        thumbnail_path
-                    )
                     try:
-                        os.unlink(thumbnail_path)
-                    except Exception:
-                        pass
+                        matched = await asyncio.get_running_loop().run_in_executor(
+                            None,
+                            self._compare_faces,
+                            reference_path,
+                            thumbnail_path
+                        )
+                    finally:
+                        try:
+                            os.unlink(thumbnail_path)
+                        except Exception:
+                            pass
 
                 result.face_matched = matched
 
@@ -155,16 +197,18 @@ class FaceMatcher:
                     break
 
             if downloaded_path:
-                matched = await asyncio.get_running_loop().run_in_executor(
-                    None,
-                    self._compare_faces,
-                    reference_path,
-                    downloaded_path
-                )
                 try:
-                    os.unlink(downloaded_path)
-                except Exception:
-                    pass
+                    matched = await asyncio.get_running_loop().run_in_executor(
+                        None,
+                        self._compare_faces,
+                        reference_path,
+                        downloaded_path
+                    )
+                finally:
+                    try:
+                        os.unlink(downloaded_path)
+                    except Exception:
+                        pass
 
                 if matched:
                     return True
@@ -233,6 +277,10 @@ class FaceMatcher:
 
     async def _download_image(self, url: str) -> Optional[str]:
         """Download image from URL to temp file. Returns file path or None."""
+        if not is_safe_url(url):
+            print(f"[FaceMatcher] SSRF blocked attempt to download unsafe URL: {url}")
+            return None
+
         try:
             async with httpx.AsyncClient(timeout=8) as client:
                 resp = await client.get(url)

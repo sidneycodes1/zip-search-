@@ -43,20 +43,38 @@ class SocialSearchService:
         Generate likely username variants from a full name.
         e.g. "John Doe" → ["johndoe", "john.doe", "john_doe", "jdoe"]
         """
-        parts = name.lower().split()
-        if len(parts) < 2:
-            return [parts[0]]
+        # Clean name: keep only letters, numbers, spaces
+        cleaned_name = re.sub(r"[^a-zA-Z0-9\s]", "", name)
+        parts = cleaned_name.lower().split()
+        if not parts:
+            return []
 
-        first, last = parts[0], parts[-1]
-        return [
-            f"{first}{last}",
-            f"{first}.{last}",
-            f"{first}_{last}",
-            f"{first[0]}{last}",
-        ]
+        if len(parts) < 2:
+            base_variants = [parts[0]]
+        else:
+            first, last = parts[0], parts[-1]
+            base_variants = [
+                f"{first}{last}",
+                f"{first}.{last}",
+                f"{first}_{last}",
+                f"{first[0]}{last}",
+            ]
+
+        # Strictly sanitize variants to avoid argument injection (no leading hyphens, only valid username chars)
+        sanitized = []
+        for v in base_variants:
+            # Must start with alphanumeric and only contain alphanumeric, dot, underscore, hyphen
+            if re.match(r"^[a-zA-Z0-9][a-zA-Z0-9\._-]{0,31}$", v):
+                sanitized.append(v)
+
+        return sanitized
 
     async def _run_maigret(self, username: str) -> List[SearchResult]:
         """Run maigret CLI as subprocess and parse JSON output."""
+        # Double check to prevent empty or invalid usernames passing through to CLI
+        if not username or not re.match(r"^[a-zA-Z0-9][a-zA-Z0-9\._-]{0,31}$", username):
+            return []
+
         results = []
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -85,7 +103,7 @@ class SocialSearchService:
                         data = json.load(f)
 
                     for site, info in data.items():
-                        if info.get("status") == "Claimed":
+                         if info.get("status") == "Claimed":
                             url = info.get("url_user", "")
                             if url:
                                 results.append(SearchResult(
