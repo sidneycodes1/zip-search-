@@ -5,8 +5,6 @@ from typing import List, Optional
 from urllib.parse import parse_qs, urlparse
 import httpx
 from app.models.search import ResultCategory, SearchResult
-import insightface
-from insightface.app import FaceAnalysis
 import numpy as np
 
 
@@ -180,14 +178,24 @@ class FaceMatcher:
 
     def _get_insight_app(self):
         if not hasattr(self, '_insight_app'):
-            self._insight_app = FaceAnalysis(name='buffalo_l')
-            self._insight_app.prepare(ctx_id=0, det_size=(640, 640))
+            try:
+                from insightface.app import FaceAnalysis
+                self._insight_app = FaceAnalysis(name='buffalo_l')
+                self._insight_app.prepare(ctx_id=0, det_size=(640, 640))
+            except ImportError:
+                print("[FaceMatcher] InsightFace not available, using DeepFace only")
+                self._insight_app = None
         return self._insight_app
 
     def _compare_faces_insight(self, img1_path: str, img2_path: str) -> bool:
         try:
-            import cv2
+            import insightface
+            from insightface.app import FaceAnalysis
+            import numpy as np
             app = self._get_insight_app()
+            if app is None:
+                return False
+            import cv2
             img1 = cv2.imread(img1_path)
             img2 = cv2.imread(img2_path)
             if img1 is None or img2 is None:
@@ -196,6 +204,7 @@ class FaceMatcher:
             faces2 = app.get(img2)
             if not faces1 or not faces2:
                 return False
+            import numpy as np
             emb1 = faces1[0].normed_embedding
             emb2 = faces2[0].normed_embedding
             similarity = float(np.dot(emb1, emb2))
