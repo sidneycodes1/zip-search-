@@ -1,31 +1,18 @@
-# Core API framework
+# Core API
 fastapi==0.111.0
 uvicorn[standard]==0.30.1
 python-multipart==0.0.9
-
-# Config
 pydantic-settings==2.3.1
-
-# HTTP client (async)
 httpx==0.27.0
+python-dotenv==1.0.1
 
 # Face matching
-deepface==0.0.92
-tf-keras==2.16.0
-insightface==0.7.3
+deepface
+opencv-python-headless
+tf-keras
 onnxruntime==1.20.0
-opencv-python-headless==4.10.0.84
-tensorflow-cpu  # DeepFace backend
 
-# Social/username search
-maigret==0.4.4
-
-# Background job queue (production)
+# OSINT
+maigret
 celery==5.4.0
 redis==5.0.7
-
-# IPFS (Phase 2 - onchain)
-# pinatapy-voucher==0.1.4
-
-# Utilities
-python-dotenv==1.0.1
